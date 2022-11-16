@@ -481,7 +481,6 @@ s3_client_open(const char *user, const char *password, const char *aws_region, b
 {
     const Aws::String access_key_id = user;
     const Aws::String secret_access_key = password;
-	const Aws::String region = aws_region;
 	Aws::Auth::AWSCredentials cred = Aws::Auth::AWSCredentials(access_key_id, secret_access_key);
 	Aws::S3::S3Client *s3_client;
 
@@ -500,9 +499,10 @@ s3_client_open(const char *user, const char *password, const char *aws_region, b
 	else
 	{
 		clientConfig.scheme = Aws::Http::Scheme::HTTPS;
-		if (region != NULL) {
-			clientConfig.region = region;
-		}
+        if (aws_region != NULL) {
+            const Aws::String region = aws_region;
+            clientConfig.region = region;
+        }
 		s3_client = new Aws::S3::S3Client(cred, clientConfig,
 				Aws::Client::AWSAuthV4Signer::PayloadSigningPolicy::Always, false);
 	}
