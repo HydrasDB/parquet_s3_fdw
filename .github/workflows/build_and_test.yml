@@ -1,0 +1,88 @@
+name: parquet_s3_fdw CI
+on:
+  push:
+  pull_request:
+jobs:
+  build-and-test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest]
+        version: [REL_14_5]
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - name: Test details
+        run: echo Build and test parquet_s3_fdw on ${{ matrix.os }} with PostgreSQL ${{ matrix.version }} branch
+
+      - name: Checkout and build PostgreSQL code
+        run: |
+          sudo apt-get update -qq
+          sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E298A3A825C0D65DFD57CBB651716619E084DAB9
+          sudo apt-get install -y build-essential libreadline-dev zlib1g-dev flex bison libxml2-dev libxslt-dev libssl-dev libxml2-utils xsltproc ccache libperl-dev
+          sudo cpan -i "IPC::Run"
+          rm -rf postgres
+          git clone --branch ${{ matrix.version }} https://github.com/postgres/postgres.git
+          pushd postgres
+          git branch
+          ./configure --prefix=$PWD/inst/ --enable-tap-tests --enable-cassert --enable-debug --with-openssl --with-perl
+          make -j4 install
+
+      - name: Install extension pre-requisites libarrow-dev and libparquet-dev
+        run: |
+          sudo apt install -y -V ca-certificates lsb-release wget
+          wget https://apache.jfrog.io/artifactory/arrow/$(lsb_release --id --short | tr 'A-Z' 'a-z')/apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+          sudo apt install -y -V ./apache-arrow-apt-source-latest-$(lsb_release --codename --short).deb
+          sudo apt update
+          sudo apt install -y -V libarrow-dev libparquet-dev
+
+      - name: Install extension pre-requisites aws-sdk-cpp
+        run: |
+          git clone --recurse-submodules https://github.com/aws/aws-sdk-cpp
+          mkdir -p sdk_build
+          pushd sdk_build
+          cmake ../aws-sdk-cpp -DCMAKE_BUILD_TYPE=Release -DCMAKE_PREFIX_PATH=/usr/local/ -DCMAKE_INSTALL_PREFIX=/usr/local/ -DBUILD_ONLY="s3" -DENABLE_TESTING="off"
+          sudo make install
+          popd
+          sudo ldconfig
+
+      - name: Start Postgres
+        run: |
+          pushd postgres
+          cd inst/bin
+          ./initdb -D data
+          ./pg_ctl -D data -l logfile start
+          cd ../..
+          mkdir contrib/parquet_s3_fdw
+          popd
+
+      - name: Checkout parquet_s3_fdw extension code
+        uses: actions/checkout@v3
+        with:
+          path: postgres/contrib/parquet_s3_fdw
+
+      - name: Set up minio
+        run: |
+          pushd postgres/contrib/parquet_s3_fdw
+          bash ./init.sh
+          popd
+
+      - name: Build and test parquet_s3_fdw extension
+        id: regression-tests
+        run: |
+          pushd postgres
+          export PATH="${PWD}/inst/bin:$PATH"
+          cd contrib/parquet_s3_fdw
+          make install
+          make installcheck
+          popd
+
+      - name: Stop minio docker images
+        run: |
+          docker rm minio_server
+          docker rm minio_server_schemaless
+
+      - name: Print regression.diffs if regression tests failed
+        if: failure() && steps.regression-tests.outcome != 'success'
+        run: |
+          pushd postgres
+          cat contrib/parquet_s3_fdw/regression.diffs
