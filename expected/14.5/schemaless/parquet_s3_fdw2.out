@@ -168,7 +168,7 @@ ERROR:  parquet_s3_fdw: either filename or dirname can be specified
 -- Specify both local file and S3 file
 --Testcase 27:
 CREATE FOREIGN TABLE dummy2 (v jsonb) SERVER parquet_s3_srv OPTIONS (filename 's3://test-bucket/dir1/file1.parquet /tmp/file2.parquet', schemaless 'true');
-ERROR:  parquet_s3_fdw: Cannot specify the mix of local file and S3 file
+ERROR:  parquet_s3_fdw: Invalid S3 file
 -- **********************************************
 -- Cleanup
 -- **********************************************

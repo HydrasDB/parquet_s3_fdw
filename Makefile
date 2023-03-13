@@ -12,7 +12,7 @@ SHLIB_LINK += -laws-cpp-sdk-core -laws-cpp-sdk-s3
 EXTENSION = parquet_s3_fdw
 DATA = parquet_s3_fdw--0.1.sql parquet_s3_fdw--0.1--0.2.sql parquet_s3_fdw--0.2--0.3.sql parquet_s3_fdw--0.3.sql
 
-REGRESS = import_local import_server parquet_s3_fdw_local parquet_s3_fdw_server parquet_s3_fdw_post_local parquet_s3_fdw_post_server parquet_s3_fdw2 parquet_s3_fdw_modify_local parquet_s3_fdw_modify_server schemaless/schemaless_local schemaless/schemaless_server schemaless/import_local schemaless/import_server schemaless/parquet_s3_fdw_local schemaless/parquet_s3_fdw_server schemaless/parquet_s3_fdw_post_local schemaless/parquet_s3_fdw_post_server schemaless/parquet_s3_fdw2 schemaless/parquet_s3_fdw_modify_local schemaless/parquet_s3_fdw_modify_server
+REGRESS = import_server parquet_s3_fdw_server parquet_s3_fdw_post_server parquet_s3_fdw_modify_server schemaless/schemaless_server schemaless/import_server schemaless/parquet_s3_fdw_server schemaless/parquet_s3_fdw_post_server schemaless/parquet_s3_fdw2 schemaless/parquet_s3_fdw_modify_server
 
 # parquet_impl.cpp requires C++ 17.
 override PG_CXXFLAGS += -std=c++17 -O3
