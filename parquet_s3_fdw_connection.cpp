@@ -546,7 +546,7 @@ parquetGetConnectionByTableid(Oid foreigntableid)
         UserMapping   *user = GetUserMapping(GetUserId(), fserver->serverid);
         parquet_s3_server_opt *options = parquet_s3_get_options(foreigntableid);
 
-        s3client = parquetGetConnection(user, options->aws_region, options->use_minio);
+        s3client = parquetGetConnection(user, options->region, options->use_minio);
     }
     return s3client;
 }
@@ -781,7 +781,7 @@ parquetImportForeignSchemaS3(ImportForeignSchemaStmt *stmt, Oid serverOid)
     ForeignServer *fserver = GetForeignServer(serverOid);
     UserMapping   *user = GetUserMapping(GetUserId(), fserver->serverid);
     parquet_s3_server_opt *options = parquet_s3_get_server_options(serverOid);
-    s3client = parquetGetConnection(user, options->aws_region, options->use_minio);
+    s3client = parquetGetConnection(user, options->region, options->use_minio);
 
     objects = parquetGetS3ObjectList(s3client, stmt->remote_schema);
 
@@ -865,7 +865,7 @@ parquetExtractParquetFields(List *fields, char **paths, const char *servername) 
             ForeignServer *fserver = GetForeignServerByName(servername, false);
             UserMapping   *user = GetUserMapping(GetUserId(), fserver->serverid);
             parquet_s3_server_opt *options = parquet_s3_get_server_options(fserver->serverid);
-            Aws::S3::S3Client *s3client = parquetGetConnection(user, options->aws_region, options->use_minio);
+            Aws::S3::S3Client *s3client = parquetGetConnection(user, options->region, options->use_minio);
 
             fields = extract_parquet_fields(paths[0], NULL, s3client);
         }

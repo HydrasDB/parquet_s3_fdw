@@ -45,6 +45,7 @@ parquet_s3_is_valid_server_option(DefElem *def)
 							def->defname, defGetString(def))));
 		return true;
 	}
+
 	if (strcmp(def->defname, SERVER_OPTION_REGION) == 0 ||
 		strcmp(def->defname, SERVER_OPTION_ENDPOINT) == 0)
 	{
@@ -53,6 +54,19 @@ parquet_s3_is_valid_server_option(DefElem *def)
 
 	if (strcmp(def->defname, SERVER_OPTION_REGION) == 0)
 	{
+		char *str = pstrdup(defGetString(def));
+		if (str == NULL || strnlen(str, 1) == 0)
+			ereport(ERROR,
+					(errcode(ERRCODE_INVALID_PARAMETER_VALUE),
+					 errmsg("parquet_s3_fdw: invalid value for string option \"%s\": %s",
+							def->defname, defGetString(def))));
+
+		return true;
+	}
+
+	if (strcmp(def->defname, SERVER_OPTION_AWS_REGION) == 0)
+	{
+		elog(WARNING, "aws_region has been deprecated, please use region instead");
 		char *str = pstrdup(defGetString(def));
 		if (str == NULL || strnlen(str, 1) == 0)
 			ereport(ERROR,
@@ -87,6 +101,10 @@ parquet_s3_extract_options(List *options, parquet_s3_server_opt * opt)
 			opt->region = defGetString(def);
 		else if (strcmp(def->defname, SERVER_OPTION_ENDPOINT) == 0)
 			opt->endpoint = defGetString(def);
+		else if (strcmp(def->defname, SERVER_OPTION_AWS_REGION) == 0) {
+			elog(WARNING, "aws_region has been deprecated, please use region instead");
+			opt->region = defGetString(def);
+		}
 	}
 }
 

@@ -1,0 +1,17 @@
+CREATE EXTENSION parquet_s3_fdw;
+SET client_min_messages = NOTICE;
+CREATE SERVER test_server FOREIGN DATA WRAPPER parquet_s3_fdw OPTIONS (
+  use_minio 'false',
+  endpoint '127.0.0.2:9001',
+  aws_region 'ap-southeast-2'
+);
+CREATE USER MAPPING FOR PUBLIC SERVER test_server OPTIONS (user 'foo', password 'foo');
+CREATE FOREIGN TABLE foo(id INT) SERVER test_server OPTIONS (filename 's3://foo/bar');
+SELECT * FROM foo;
+WARNING:  aws_region has been deprecated, please use region instead
+ERROR:  parquet_s3_fdw: failed to exctract row groups from Parquet file: failed to open Parquet file HeadObject failed
+DROP EXTENSION parquet_s3_fdw CASCADE;
+NOTICE:  drop cascades to 3 other objects
+DETAIL:  drop cascades to server test_server
+drop cascades to user mapping for public on server test_server
+drop cascades to foreign table foo
