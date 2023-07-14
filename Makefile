@@ -25,7 +25,7 @@ endif
 
 # PostgreSQL uses link time optimization option which may break compilation
 # (this happens on travis-ci). Redefine COMPILE.cxx.bc without this option.
-COMPILE.cxx.bc = $(CLANG) -xc++ -std=c++17 -O3 -Wno-error=register -Wno-deprecated-register -Wno-ignored-attributes $(BITCODE_CXXFLAGS) $(CPPFLAGS) -emit-llvm -c
+COMPILE.cxx.bc = $(CLANG) -xc++ -std=c++17 -O3 -Wno-error=register -Wno-deprecated-register -Wno-ignored-attributes $(BITCODE_CXXFLAGS) $(CPPFLAGS) $(CCFLAGS) -emit-llvm -c
 
 ifdef USE_PGXS
 	PG_CONFIG = pg_config
